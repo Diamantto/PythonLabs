@@ -1,0 +1,75 @@
+from scipy.optimize import minimize
+import random
+from math import sqrt
+
+
+k = 4
+g = 0
+
+
+def function(x_y):
+    # x ** 2 + (y - g) ** 2 - 2kgx + k
+    x = x_y[0]
+    y = x_y[1]
+    return x ** 2 + y ** 2 + 4
+
+
+def grad():
+    eps = 0.01
+    x_0 = 2
+    y_0 = -3
+    step = 1
+
+    def dx(x):
+        return 2 * x
+
+    def dy(y):
+        return 2 * y
+
+    # Знаходження точності
+    def accuracy(x, y):
+        return dx(x) ** 2 + dy(y) ** 2
+
+    # знаходимо значення наступної точки
+    def new_point(x_old, y_old, h):
+        x_new = x_old + h * (-dx(x_old))  # антиградієнт
+        y_new = y_old + h * (-dy(y_old))  # антиградієнт
+        return [x_new, y_new]
+
+    # знаходимо початкові значення відповідно до варіанту
+    x, y = new_point(x_0, y_0, step)
+    while accuracy(x, y) > eps:
+        while function(new_point(x, y, step)) >= function([x, y]):
+            step /= 2
+        x, y = new_point(x, y, step)
+    return x, y
+
+
+def adapt():
+    eps = 0.01
+    step = 1
+    counts = 50
+    x_0, y_0 = 2, -3
+
+    def new_point():
+        x_r = random.uniform(-1, 1)
+        y_r = random.uniform(-1, 1)
+        x, y = x_0 + step * x_r, y_0 + step * y_r
+        return [x, y]
+
+    while step > eps:
+        for i in range(counts):
+            x, y = new_point()
+            if function([x, y]) < function([x_0, y_0]):
+                x_0, y_0 = x, y
+                step *= 2
+                break
+        else:
+            step /= 2
+    return x, y
+
+
+
+print("Gradient method: ", grad())
+print("Adaptive method: ", adapt())
+print("Built-in method: ", minimize(function, [2, -3]).x)
